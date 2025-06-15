@@ -1,26 +1,47 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --cream-50: #fefdf8;
+  --cream-100: #fdf9e7;
+  --cream-200: #faf2c7;
+  --cream-300: #f6e89d;
+  --cream-400: #f0d96b;
+  --cream-500: #e8c547;
+  --cream-600: #d4a72c;
+  --cream-700: #b08525;
+  --cream-800: #8f6a26;
+  --cream-900: #785724;
+
+  --sage-50: #f6f7f6;
+  --sage-100: #e9ebe9;
+  --sage-200: #d4d8d4;
+  --sage-300: #b0bab0;
+  --sage-400: #879487;
+  --sage-500: #6a786a;
+  --sage-600: #546254;
+  --sage-700: #455045;
+  --sage-800: #3a423a;
+  --sage-900: #323732;
+
+  --gold-50: #fffbeb;
+  --gold-100: #fef3c7;
+  --gold-200: #fde68a;
+  --gold-300: #fcd34d;
+  --gold-400: #fbbf24;
+  --gold-500: #f59e0b;
+  --gold-600: #d97706;
+  --gold-700: #b45309;
+  --gold-800: #92400e;
+  --gold-900: #78350f;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    @apply bg-background text-foreground;
+  }
 }

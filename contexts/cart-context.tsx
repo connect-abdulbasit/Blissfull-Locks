@@ -1,9 +1,8 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useReducer, type ReactNode } from "react"
-import type { Product, CartItem } from "./types"
+import type { CartItem, Product } from "@/lib/types"
 
 interface CartState {
   items: CartItem[]
@@ -35,28 +34,28 @@ function cartReducer(state: CartState, action: CartAction): CartState {
           total: updatedItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
         }
       } else {
-        const updatedItems = [...state.items, { product: action.product, quantity: 1 }]
+        const newItems = [...state.items, { product: action.product, quantity: 1 }]
         return {
-          items: updatedItems,
-          total: updatedItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+          items: newItems,
+          total: newItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
         }
       }
     }
 
     case "REMOVE_ITEM": {
-      const updatedItems = state.items.filter((item) => item.product.id !== action.productId)
+      const newItems = state.items.filter((item) => item.product.id !== action.productId)
       return {
-        items: updatedItems,
-        total: updatedItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+        items: newItems,
+        total: newItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
       }
     }
 
     case "UPDATE_QUANTITY": {
       if (action.quantity <= 0) {
-        const updatedItems = state.items.filter((item) => item.product.id !== action.productId)
+        const newItems = state.items.filter((item) => item.product.id !== action.productId)
         return {
-          items: updatedItems,
-          total: updatedItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+          items: newItems,
+          total: newItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
         }
       }
 

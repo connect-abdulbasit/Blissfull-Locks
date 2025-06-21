@@ -1,12 +1,12 @@
 import type { Config } from "tailwindcss"
 
-const config = {
+const config: Config = {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "*.{js,ts,jsx,tsx,mdx}",
   ],
   prefix: "",
   theme: {
@@ -52,47 +52,34 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Custom Blissful Locks colors
         cream: {
           50: "#fefdf8",
-          100: "#fdf9e7",
-          200: "#faf2c7",
-          300: "#f6e89d",
-          400: "#f0d96b",
-          500: "#e8c547",
-          600: "#d4a72c",
-          700: "#b08525",
-          800: "#8f6a26",
-          900: "#785724",
+          100: "#fef7e6",
+          200: "#fdefd1",
         },
         sage: {
-          50: "#f6f7f6",
-          100: "#e9ebe9",
-          200: "#d4d8d4",
-          300: "#b0bab0",
-          400: "#879487",
-          500: "#6a786a",
-          600: "#546254",
-          700: "#455045",
-          800: "#3a423a",
-          900: "#323732",
+          50: "#f7f8f3",
+          100: "#ecf0e1",
+          200: "#c7d2a8",
+          700: "#4a5d23",
+          800: "#3d4f1f",
+          900: "#2d3b17",
         },
         gold: {
-          50: "#fffbeb",
-          100: "#fef3c7",
-          200: "#fde68a",
-          300: "#fcd34d",
-          400: "#fbbf24",
-          500: "#f59e0b",
-          600: "#d97706",
-          700: "#b45309",
-          800: "#92400e",
-          900: "#78350f",
+          400: "#d4af37",
+          500: "#b8941f",
+          600: "#9c7c1a",
         },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      fontFamily: {
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        serif: ["var(--font-playfair)", "Georgia", "serif"],
       },
       keyframes: {
         "accordion-down": {
@@ -111,6 +98,6 @@ const config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config
+}
 
 export default config

@@ -1,14 +1,11 @@
 export interface Product {
   id: string
   name: string
-  description: string | null
+  description: string
   price: number
-  image_url: string | null
+  image: string
   category: string
-  in_stock: boolean
-  featured: boolean
-  created_at: string
-  updated_at: string
+  inStock: boolean
 }
 
 export interface CartItem {
@@ -16,32 +13,34 @@ export interface CartItem {
   quantity: number
 }
 
-export interface Profile {
+export interface User {
   id: string
-  email: string | null
-  full_name: string | null
-  phone: string | null
-  address: string | null
-  city: string | null
-  state: string | null
-  zip_code: string | null
-  role: string
-  created_at: string
-  updated_at: string
+  email: string
+  name?: string
+  phone?: string
+  address?: string
+  role?: "admin" | "user"
 }
 
 export interface Order {
   id: string
-  user_id: string | null
-  total_amount: number
-  status: string
-  customer_name: string
-  customer_email: string
-  customer_phone: string | null
-  shipping_address: string
-  shipping_city: string
-  shipping_state: string
-  shipping_zip: string
-  created_at: string
-  updated_at: string
+  userId: string
+  items: CartItem[]
+  total: number
+  customerInfo: {
+    name: string
+    email: string
+    phone: string
+    address: string
+  }
+  status: "pending" | "processing" | "shipped" | "delivered"
+  createdAt: string
+}
+
+export interface Testimonial {
+  id: string
+  name: string
+  rating: number
+  comment: string
+  image?: string
 }

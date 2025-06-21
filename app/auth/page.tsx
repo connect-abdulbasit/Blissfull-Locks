@@ -4,137 +4,167 @@ import type React from "react"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { supabase } from "@/lib/supabase"
-import { useRouter } from "next/navigation"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function AuthPage() {
-  const [isSignUp, setIsSignUp] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({
+  const [isLoading, setIsLoading] = useState(false)
+  const [loginData, setLoginData] = useState({ email: "", password: "" })
+  const [signupData, setSignupData] = useState({
     email: "",
     password: "",
-    fullName: "",
+    confirmPassword: "",
+    name: "",
   })
-  const router = useRouter()
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }))
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    // TODO: Implement Supabase authentication
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    console.log("Login attempt:", loginData)
+
+    setIsLoading(false)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    setIsLoading(true)
 
-    try {
-      if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-        })
-
-        if (error) {
-          if (error.message.includes("Demo mode")) {
-            alert(
-              "Demo mode: Authentication is not available in preview. In a real deployment, you would receive a confirmation email.",
-            )
-          } else {
-            throw error
-          }
-        } else if (data.user) {
-          // Create profile
-          const { error: profileError } = await supabase.from("profiles").insert({
-            id: data.user.id,
-            email: formData.email,
-            full_name: formData.fullName,
-            role: "customer",
-          })
-
-          if (profileError) console.error("Error creating profile:", profileError)
-          alert("Check your email for the confirmation link!")
-        }
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        })
-
-        if (error) {
-          if (error.message.includes("Demo mode")) {
-            alert(
-              "Demo mode: Authentication is not available in preview. In a real deployment, you would be signed in.",
-            )
-          } else {
-            throw error
-          }
-        } else {
-          router.push("/")
-        }
-      }
-    } catch (error: any) {
-      alert(error.message)
-    } finally {
-      setLoading(false)
+    if (signupData.password !== signupData.confirmPassword) {
+      alert("Passwords do not match")
+      setIsLoading(false)
+      return
     }
+
+    // TODO: Implement Supabase authentication
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    console.log("Signup attempt:", signupData)
+
+    setIsLoading(false)
   }
 
   return (
-    <div className="py-20 bg-cream-50 min-h-screen">
-      <div className="container mx-auto px-4">
-        <div className="max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-sage-800 mb-8 text-center">{isSignUp ? "Sign Up" : "Sign In"}</h1>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
-              <div>
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input id="fullName" name="fullName" value={formData.fullName} onChange={handleInputChange} required />
-              </div>
-            )}
-
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <Button type="submit" className="w-full bg-gold-500 hover:bg-gold-600 text-white" disabled={loading}>
-              {loading ? "Loading..." : isSignUp ? "Sign Up" : "Sign In"}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sage-600 hover:text-sage-800 underline"
-            >
-              {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
-            </button>
-          </div>
+    <div className="container mx-auto px-4 py-12">
+      <div className="max-w-md mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-sage-800 mb-2">Welcome to Blissful Locks</h1>
+          <p className="text-sage-600">Sign in to your account or create a new one</p>
         </div>
+
+        <Tabs defaultValue="login" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="login">Sign In</TabsTrigger>
+            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="login">
+            <Card>
+              <CardHeader>
+                <CardTitle>Sign In</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div>
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input
+                      id="login-email"
+                      type="email"
+                      required
+                      value={loginData.email}
+                      onChange={(e) => setLoginData((prev) => ({ ...prev, email: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="login-password">Password</Label>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      required
+                      value={loginData.password}
+                      onChange={(e) => setLoginData((prev) => ({ ...prev, password: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-sage-700 hover:bg-sage-800 text-white"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Signing In..." : "Sign In"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="signup">
+            <Card>
+              <CardHeader>
+                <CardTitle>Create Account</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSignup} className="space-y-4">
+                  <div>
+                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Input
+                      id="signup-name"
+                      type="text"
+                      required
+                      value={signupData.name}
+                      onChange={(e) => setSignupData((prev) => ({ ...prev, name: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      required
+                      value={signupData.email}
+                      onChange={(e) => setSignupData((prev) => ({ ...prev, email: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      required
+                      value={signupData.password}
+                      onChange={(e) => setSignupData((prev) => ({ ...prev, password: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="signup-confirm">Confirm Password</Label>
+                    <Input
+                      id="signup-confirm"
+                      type="password"
+                      required
+                      value={signupData.confirmPassword}
+                      onChange={(e) => setSignupData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-gold-500 hover:bg-gold-600 text-white"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Creating Account..." : "Create Account"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   )

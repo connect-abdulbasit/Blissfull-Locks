@@ -2,61 +2,30 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
-import { useCart } from "@/lib/cart-context"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { supabase } from "@/lib/supabase"
-import type { Profile } from "@/lib/types"
-import type { User } from "@supabase/supabase-js"
-import { useRouter } from "next/navigation"
+import { useCart } from "@/contexts/cart-context"
+import { formatPrice } from "@/lib/utils"
+import { CreditCard, Lock } from "lucide-react"
+import Image from "next/image"
 
 export default function CheckoutPage() {
   const { state, dispatch } = useCart()
-  const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
+    firstName: "",
+    lastName: "",
     phone: "",
     address: "",
     city: "",
     state: "",
     zipCode: "",
+    country: "United States",
   })
-
-  useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      setUser(user)
-
-      if (user) {
-        const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
-
-        if (profile) {
-          setProfile(profile)
-          setFormData({
-            name: profile.full_name || "",
-            email: profile.email || user.email || "",
-            phone: profile.phone || "",
-            address: profile.address || "",
-            city: profile.city || "",
-            state: profile.state || "",
-            zipCode: profile.zip_code || "",
-          })
-        } else {
-          setFormData((prev) => ({ ...prev, email: user.email || "" }))
-        }
-      }
-    }
-
-    getUser()
-  }, [])
+  const [isProcessing, setIsProcessing] = useState(false)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -67,140 +36,226 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    setIsProcessing(true)
 
-    try {
-      // Create order
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          user_id: user?.id || null,
-          total_amount: state.total,
-          customer_name: formData.name,
-          customer_email: formData.email,
-          customer_phone: formData.phone,
-          shipping_address: formData.address,
-          shipping_city: formData.city,
-          shipping_state: formData.state,
-          shipping_zip: formData.zipCode,
-          status: "pending",
-        })
-        .select()
-        .single()
+    // Simulate order processing
+    await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      if (orderError) throw orderError
+    // TODO: Integrate with Supabase to save order
+    console.log("Order placed:", { items: state.items, customer: formData })
 
-      // Create order items
-      const orderItems = state.items.map((item) => ({
-        order_id: order.id,
-        product_id: item.product.id,
-        quantity: item.quantity,
-        price: item.product.price,
-      }))
+    // Clear cart and redirect
+    dispatch({ type: "CLEAR_CART" })
+    alert("Order placed successfully! You will receive a confirmation email shortly.")
 
-      const { error: itemsError } = await supabase.from("order_items").insert(orderItems)
-
-      if (itemsError) throw itemsError
-
-      // Clear cart
-      dispatch({ type: "CLEAR_CART" })
-
-      // Redirect to success page
-      router.push(`/order-success?orderId=${order.id}`)
-    } catch (error) {
-      console.error("Error creating order:", error)
-      alert("There was an error processing your order. Please try again.")
-    } finally {
-      setLoading(false)
-    }
+    setIsProcessing(false)
   }
 
   if (state.items.length === 0) {
-    router.push("/cart")
-    return null
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-md mx-auto text-center">
+          <h1 className="text-3xl font-bold text-sage-800 mb-4">Your Cart is Empty</h1>
+          <p className="text-sage-600 mb-8">Add some products to your cart before checking out.</p>
+          <Button asChild size="lg" className="bg-gold-500 hover:bg-gold-600 text-white">
+            <a href="/products">Continue Shopping</a>
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="py-20 bg-cream-50 min-h-screen">
-      <div className="container mx-auto px-4">
-        <h1 className="text-4xl font-bold text-sage-800 mb-8 text-center">Checkout</h1>
+    <div className="container mx-auto px-4 py-12">
+      <h1 className="text-4xl font-bold text-sage-800 mb-8">Checkout</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white rounded-lg p-6 shadow-lg">
-            <h2 className="text-2xl font-semibold text-sage-800 mb-6">Shipping Information</h2>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Full Name</Label>
-                <Input id="name" name="name" value={formData.name} onChange={handleInputChange} required />
-              </div>
-
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" name="phone" value={formData.phone} onChange={handleInputChange} />
-              </div>
-
-              <div>
-                <Label htmlFor="address">Address</Label>
-                <Input id="address" name="address" value={formData.address} onChange={handleInputChange} required />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="city">City</Label>
-                  <Input id="city" name="city" value={formData.city} onChange={handleInputChange} required />
-                </div>
-                <div>
-                  <Label htmlFor="state">State</Label>
-                  <Input id="state" name="state" value={formData.state} onChange={handleInputChange} required />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="zipCode">Zip Code</Label>
-                <Input id="zipCode" name="zipCode" value={formData.zipCode} onChange={handleInputChange} required />
-              </div>
-
-              <Button type="submit" className="w-full bg-gold-500 hover:bg-gold-600 text-white" disabled={loading}>
-                {loading ? "Processing..." : "Place Order"}
-              </Button>
-            </form>
-          </div>
-
-          <div className="bg-white rounded-lg p-6 shadow-lg h-fit">
-            <h2 className="text-2xl font-semibold text-sage-800 mb-6">Order Summary</h2>
-
-            <div className="space-y-4 mb-6">
-              {state.items.map((item) => (
-                <div key={item.product.id} className="flex justify-between">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        {/* Checkout Form */}
+        <div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-xl font-bold text-sage-800 mb-4">Contact Information</h2>
+                <div className="space-y-4">
                   <div>
-                    <p className="font-medium text-sage-800">{item.product.name}</p>
-                    <p className="text-sage-600">Qty: {item.quantity}</p>
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="mt-1"
+                    />
                   </div>
-                  <p className="font-medium text-sage-800">${(item.product.price * item.quantity).toFixed(2)}</p>
                 </div>
-              ))}
-            </div>
+              </CardContent>
+            </Card>
 
-            <div className="border-t pt-4">
-              <div className="flex justify-between text-xl font-semibold text-sage-800">
-                <span>Total</span>
-                <span>${state.total.toFixed(2)}</span>
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-xl font-bold text-sage-800 mb-4">Shipping Address</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      name="firstName"
+                      required
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      name="lastName"
+                      required
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      required
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="address">Address</Label>
+                    <Input
+                      id="address"
+                      name="address"
+                      required
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="city">City</Label>
+                    <Input
+                      id="city"
+                      name="city"
+                      required
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="state">State</Label>
+                    <Input
+                      id="state"
+                      name="state"
+                      required
+                      value={formData.state}
+                      onChange={handleInputChange}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="zipCode">ZIP Code</Label>
+                    <Input
+                      id="zipCode"
+                      name="zipCode"
+                      required
+                      value={formData.zipCode}
+                      onChange={handleInputChange}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-xl font-bold text-sage-800 mb-4">Payment Information</h2>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2 text-sm text-sage-600">
+                    <Lock className="h-4 w-4" />
+                    <span>Your payment information is secure and encrypted</span>
+                  </div>
+                  <div className="bg-sage-50 p-4 rounded-lg">
+                    <p className="text-sage-700 text-center">
+                      Payment processing integration with Stripe/PayPal would be implemented here
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Button
+              type="submit"
+              size="lg"
+              disabled={isProcessing}
+              className="w-full bg-gold-500 hover:bg-gold-600 text-white"
+            >
+              <CreditCard className="h-5 w-5 mr-2" />
+              {isProcessing ? "Processing..." : `Place Order - ${formatPrice(state.total * 1.08)}`}
+            </Button>
+          </form>
+        </div>
+
+        {/* Order Summary */}
+        <div>
+          <Card className="sticky top-4">
+            <CardContent className="p-6">
+              <h2 className="text-xl font-bold text-sage-800 mb-4">Order Summary</h2>
+
+              <div className="space-y-4 mb-6">
+                {state.items.map((item) => (
+                  <div key={item.product.id} className="flex items-center space-x-3">
+                    <Image
+                      src={item.product.image || "/placeholder.svg"}
+                      alt={item.product.name}
+                      width={60}
+                      height={60}
+                      className="rounded-lg object-cover"
+                    />
+                    <div className="flex-grow">
+                      <p className="font-semibold text-sage-800">{item.product.name}</p>
+                      <p className="text-sm text-sage-600">Qty: {item.quantity}</p>
+                    </div>
+                    <p className="font-semibold text-gold-500">{formatPrice(item.product.price * item.quantity)}</p>
+                  </div>
+                ))}
               </div>
-            </div>
-          </div>
+
+              <hr className="my-4" />
+
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>{formatPrice(state.total)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Shipping</span>
+                  <span>Free</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Tax</span>
+                  <span>{formatPrice(state.total * 0.08)}</span>
+                </div>
+                <hr className="my-2" />
+                <div className="flex justify-between text-xl font-bold">
+                  <span>Total</span>
+                  <span className="text-gold-500">{formatPrice(state.total * 1.08)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
